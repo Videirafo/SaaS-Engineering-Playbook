@@ -1,14 +1,14 @@
-<div align="center">
+<p align="center"><img src="./assets/banner.svg" alt="SaaS Engineering Playbook banner" width="100%" /></p>
 
 # Manual de Engenharia de SaaS
 
-### SaaS Engineering Playbook
+**Guia prático para projetar, construir, testar, publicar e operar produtos SaaS com qualidade de engenharia.**
 
-**Um guia prático para projetar, construir, testar, publicar e operar produtos SaaS com qualidade de engenharia.**
+| Status | Foco | Qualidade |
+|---|---|---|
+| `v0.1 · foundation` | multi-tenancy, arquitetura, segurança e produção | GitHub Actions · docs quality · secret scan |
 
 `multi-tenancy` · `architecture` · `security` · `APIs` · `testing` · `observability` · `DevOps` · `AI Agents`
-
-</div>
 
 ---
 
@@ -126,8 +126,6 @@ Veja **[SECURITY.md](./SECURITY.md)**.
 ## Contribuindo
 
 Contribuições úteis são bem-vindas: correções técnicas, exemplos, documentação, testes conceituais e melhorias nos templates.
-
-Fluxo recomendado:
 
 ```text
 Issue → branch → mudança pequena → validação → Pull Request → review → merge
