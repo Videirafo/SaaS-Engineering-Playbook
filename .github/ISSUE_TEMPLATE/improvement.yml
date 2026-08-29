@@ -1,0 +1,35 @@
+name: Melhoria do Playbook
+description: Proponha uma correção, exemplo, template ou melhoria técnica.
+title: "[Melhoria] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por contribuir. Não inclua secrets, dados privados ou código proprietário.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou oportunidade
+      description: O que está incorreto, ausente ou poderia ficar melhor?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      description: Qual mudança você sugere?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidência ou referência
+      description: Documentação oficial, exemplo reproduzível ou contexto técnico relevante.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Segurança
+      options:
+        - label: A proposta não contém senha, token, `.env`, dado de cliente ou informação privada.
+          required: true
