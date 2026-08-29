@@ -2,21 +2,48 @@
 
 # Manual de Engenharia de SaaS
 
-**Guia prático para projetar, construir, testar, publicar e operar produtos SaaS com qualidade de engenharia.**
+**Playbook + projeto executável para projetar, construir, testar e operar SaaS com qualidade de engenharia.**
 
-| Status | Foco | Qualidade |
+| Status | Projeto executável | Qualidade |
 |---|---|---|
-| `v0.1 · foundation` | multi-tenancy, arquitetura, segurança e produção | GitHub Actions · docs quality · secret scan |
+| `v0.2` | **SaaS Tenant Dashboard** | GitHub Actions · typecheck · production build · secret scan |
 
 `multi-tenancy` · `architecture` · `security` · `APIs` · `testing` · `observability` · `DevOps` · `AI Agents`
 
----
+## Clone & Build no VS Code
+
+O repositório agora inclui um starter Next.js real que pode ser clonado, aberto e modificado localmente:
+
+```bash
+git clone https://github.com/Videirafo/SaaS-Engineering-Playbook.git
+cd SaaS-Engineering-Playbook/examples/saas-tenant-dashboard
+code .
+npm install
+npm run dev
+```
+
+**[Abrir o SaaS Tenant Dashboard →](./examples/saas-tenant-dashboard/README.md)**
+
+No VS Code, use **Run and Debug** para `SaaS: run Next.js` ou **Tasks: Run Task** para:
+
+- `SaaS: dev server`;
+- `SaaS: typecheck`;
+- `SaaS: production build`.
+
+### O que o exemplo demonstra
+
+- App Router com Next.js 16.3.3 + React 19.2.8 + TypeScript;
+- rota dinâmica por tenant;
+- resolução do contexto no servidor;
+- `/api/health`;
+- UI responsiva sem dependência de banco ou API key;
+- base explícita para evoluir autenticação, PostgreSQL, `tenant_id`, RLS e audit log.
+
+> O slug da URL **não é isolamento multi-tenant**. O playbook trata autorização e isolamento como controles de servidor e dados, não como convenção visual.
 
 ## Por que este projeto existe
 
-Construir um SaaS não é apenas criar telas e conectar um banco de dados. Um produto sustentável precisa tratar desde cedo de **isolamento de tenants, autenticação, autorização, contratos de API, migrations, segurança, testes, observabilidade, deploy e rollback**.
-
-Este playbook organiza essas decisões em um fluxo reutilizável:
+Construir um SaaS sustentável exige mais do que telas e banco. O sistema precisa tratar **isolamento de tenants, autenticação, autorização, contratos, migrations, segurança, testes, observabilidade, deploy e rollback**.
 
 ```text
 PROBLEM
@@ -32,116 +59,71 @@ PROBLEM
 → IMPROVE
 ```
 
-## Para quem é
+## Conteúdo técnico
 
-- desenvolvedores full stack;
-- equipes construindo SaaS B2B/B2C;
-- estudantes de engenharia de software;
-- pessoas criando produtos multi-tenant;
-- equipes integrando IA e automações a sistemas de negócio;
-- quem precisa levar um MVP até produção sem perder rastreabilidade.
-
-## O que você encontra aqui
-
-| Área | Pergunta que o playbook ajuda a responder |
-|---|---|
-| Produto & requisitos | O que realmente precisa ser construído e por quê? |
-| Multi-tenancy | Como impedir vazamento de dados entre clientes? |
-| Auth & autorização | Quem pode fazer o quê em qual tenant? |
-| Dados | Como modelar, migrar e preservar integridade? |
-| APIs | Como criar contratos evolutivos e previsíveis? |
-| Testes | Quais comportamentos precisam ser protegidos? |
-| Segurança | Quais controles entram antes da produção? |
-| Observabilidade | Como saber quando algo está degradando? |
-| Deploy | Como publicar e voltar com segurança? |
-| AI Agents | Como integrar IA sem entregar controle irrestrito ao modelo? |
-
-## Mapa do playbook
-
-- **[Playbook principal](./docs/PLAYBOOK.md)** — arquitetura e decisões do ciclo completo.
-- **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — modelos de tenancy, isolamento e testes.
-- **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails, handoff e observabilidade.
-- **[Roadmap](./docs/ROADMAP.md)** — evolução planejada.
+- **[Playbook principal](./docs/PLAYBOOK.md)** — ciclo completo de engenharia;
+- **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — tenancy, isolamento e testes;
+- **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails e handoff;
+- **[Roadmap](./docs/ROADMAP.md)** — evolução planejada;
+- **[Projetos executáveis](./examples/README.md)** — exemplos prontos para clone/VS Code.
 
 ### Templates
 
-- **[Architecture Decision Record](./templates/ADR_TEMPLATE.md)**
-- **[Production Readiness Checklist](./templates/PRODUCTION_READINESS_CHECKLIST.md)**
-- **[Tenant Isolation Test Matrix](./templates/TENANT_ISOLATION_TEST_MATRIX.md)**
+- [Architecture Decision Record](./templates/ADR_TEMPLATE.md)
+- [Production Readiness Checklist](./templates/PRODUCTION_READINESS_CHECKLIST.md)
+- [Tenant Isolation Test Matrix](./templates/TENANT_ISOLATION_TEST_MATRIX.md)
 
 ## Arquitetura de referência
 
 ```mermaid
 flowchart TB
-    U[Users / Channels] --> E[Edge / Web App]
+    U[Users / Channels] --> E[Web / Edge]
     E --> A[Application / API]
     A --> AUTH[AuthN / AuthZ]
     A --> D[Domain Services]
     D --> DB[(PostgreSQL)]
-    D --> Q[Async Jobs / Queue]
-    D --> I[External Integrations]
+    D --> Q[Async Jobs]
+    D --> I[Integrations]
     D --> AI[AI Orchestrator]
     AI --> R[RAG / Knowledge]
-    AI --> T[Tools / Business Actions]
+    AI --> T[Tools]
     A --> O[Logs / Metrics / Traces]
     Q --> O
     AI --> O
 ```
 
-A tecnologia pode variar. O princípio permanece: **separar responsabilidades, tornar permissões explícitas e deixar operações críticas observáveis**.
+## Quality gate
 
-## Quality gates
-
-Antes de considerar um fluxo crítico pronto:
+Antes de chamar um fluxo crítico de pronto:
 
 ```text
-[ ] requisitos claros
-[ ] regra de negócio identificada
+[ ] requisito e regra de negócio claros
 [ ] autorização explícita
-[ ] isolamento de tenant testado
+[ ] tenant isolation testado
 [ ] validação de entrada
-[ ] happy path testado
-[ ] failure path testado
-[ ] logs úteis
-[ ] métricas/alertas quando necessário
+[ ] happy path + failure path
+[ ] logs e observabilidade
 [ ] migration/deploy avaliados
 [ ] rollback conhecido
 [ ] documentação sincronizada
 ```
 
-## Segurança e privacidade
+## Git workflow
 
-Este repositório contém **somente conhecimento genérico e público**. Não devem ser publicados:
-
-- senhas ou tokens;
-- `.env` reais;
-- chaves privadas;
-- IPs ou endpoints internos sensíveis;
-- dados de clientes;
-- dumps de bancos;
-- código proprietário de projetos privados.
-
-Veja **[SECURITY.md](./SECURITY.md)**.
-
-## Contribuindo
-
-Contribuições úteis são bem-vindas: correções técnicas, exemplos, documentação, testes conceituais e melhorias nos templates.
-
-```text
-Issue → branch → mudança pequena → validação → Pull Request → review → merge
+```bash
+git checkout -b feat/minha-evolucao
+# altere e valide no VS Code
+git add .
+git commit -m "feat: minha evolucao"
+git push -u origin feat/minha-evolucao
 ```
 
-Veja **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
+Depois abra uma Pull Request. Consulte [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Status
+## Segurança e privacidade
 
-**v0.1 — fundação pública.** O projeto está sendo evoluído por conteúdo verificável, exemplos e contribuições reais. Não são criados commits ou PRs artificiais apenas para inflar atividade.
+Este repositório contém somente material público. Não publique senhas, tokens, `.env` reais, chaves privadas, IPs internos, dados de clientes, dumps de banco ou código proprietário. Veja [SECURITY.md](./SECURITY.md).
 
-## Sobre o autor
+---
 
-Criado por **Fernando Videira** como parte de uma base pública de engenharia de software.
-
-- [Perfil GitHub](https://github.com/Videirafo)
-- [Portfólio técnico e skills](https://github.com/Videirafo/Fernando_Videira)
-
-> A escolha de licença ainda será feita conscientemente antes de declarar direitos de reutilização do conteúdo e dos templates.
+Criado por **Fernando Videira** · [Perfil](https://github.com/Videirafo) · [Engineering Portfolio](https://github.com/Videirafo/Fernando_Videira)
