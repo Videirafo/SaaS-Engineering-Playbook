@@ -1,0 +1,54 @@
+name: Docs Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            README.md \
+            SECURITY.md \
+            CONTRIBUTING.md \
+            docs/PLAYBOOK.md \
+            docs/MULTITENANCY.md \
+            docs/AI_AGENTS.md \
+            docs/ROADMAP.md \
+            templates/ADR_TEMPLATE.md \
+            templates/PRODUCTION_READINESS_CHECKLIST.md \
+            templates/TENANT_ISOLATION_TEST_MATRIX.md; do
+            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+          done
+
+      - name: Validate important internal links
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q './docs/PLAYBOOK.md' README.md
+          grep -q './docs/MULTITENANCY.md' README.md
+          grep -q './docs/AI_AGENTS.md' README.md
+          grep -q './templates/ADR_TEMPLATE.md' README.md
+          grep -q './templates/PRODUCTION_READINESS_CHECKLIST.md' README.md
+
+      - name: Check common secret patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='docs-quality.yml' '(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-proj-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY)' .; then
+            echo "Potential secret detected."
+            exit 1
+          fi
+          echo "No common secret patterns detected."
