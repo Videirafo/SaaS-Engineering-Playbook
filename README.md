@@ -43,6 +43,16 @@ No VS Code, use **Run and Debug** para `SaaS: run Next.js` ou as tasks de dev, t
 
 **[Abrir o SaaS Tenant Dashboard →](./examples/saas-tenant-dashboard/README.md)**
 
+## Ajude sem escrever código
+
+Queremos validar o starter com pessoas que não participaram da construção. Clone, execute o dashboard e relate onde o setup ficou lento, confuso ou desnecessário.
+
+**[Testar o quickstart e enviar feedback →](https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/20)**
+
+Para uma primeira contribuição de código, há uma tarefa pequena para transformar o limite entre routing context e autorização em contrato testável.
+
+**[Good first issue: tenant-context contract tests →](https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/19)**
+
 ## O que o exemplo demonstra
 
 - Next.js 16.3.3 + React 19.2.8 + TypeScript;
