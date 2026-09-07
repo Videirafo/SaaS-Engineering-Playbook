@@ -1,45 +1,59 @@
 <p align="center"><img src="./assets/banner.svg" alt="SaaS Engineering Playbook banner" width="100%" /></p>
 
-# Manual de Engenharia de SaaS
+# SaaS Engineering Playbook
 
-**Playbook + projeto executável para projetar, construir, testar e operar SaaS com qualidade de engenharia.**
+<p align="center">
+  <a href="https://github.com/Videirafo/SaaS-Engineering-Playbook/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Videirafo/SaaS-Engineering-Playbook/example-saas.yml?branch=main&label=build"></a>
+  <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/Videirafo/SaaS-Engineering-Playbook?style=social">
+</p>
+
+**Playbook + projeto executável para projetar, construir, testar e operar SaaS multi-tenant com qualidade de engenharia.**
 
 | Status | Projeto executável | Qualidade |
 |---|---|---|
-| `v0.2` | **SaaS Tenant Dashboard** | GitHub Actions · typecheck · production build · secret scan |
+| `v0.3` | **SaaS Tenant Dashboard** | GitHub Actions · typecheck · production build · CodeQL · Docker |
 
 `multi-tenancy` · `architecture` · `security` · `APIs` · `testing` · `observability` · `DevOps` · `AI Agents`
 
-## Clone & Build no VS Code
+## Comece em 60 segundos
 
-O repositório agora inclui um starter Next.js real que pode ser clonado, aberto e modificado localmente:
+### Docker
+
+```bash
+git clone https://github.com/Videirafo/SaaS-Engineering-Playbook.git
+cd SaaS-Engineering-Playbook/examples/saas-tenant-dashboard
+docker compose up --build
+```
+
+Abra `http://localhost:3000` e valide `http://localhost:3000/api/health`.
+
+### VS Code / Node.js
 
 ```bash
 git clone https://github.com/Videirafo/SaaS-Engineering-Playbook.git
 cd SaaS-Engineering-Playbook/examples/saas-tenant-dashboard
 code .
 npm install
+npm run check
 npm run dev
 ```
 
+No VS Code, use **Run and Debug** para `SaaS: run Next.js` ou as tasks de dev, typecheck e production build.
+
 **[Abrir o SaaS Tenant Dashboard →](./examples/saas-tenant-dashboard/README.md)**
 
-No VS Code, use **Run and Debug** para `SaaS: run Next.js` ou **Tasks: Run Task** para:
+## O que o exemplo demonstra
 
-- `SaaS: dev server`;
-- `SaaS: typecheck`;
-- `SaaS: production build`.
+- Next.js 16.3.3 + React 19.2.8 + TypeScript;
+- App Router e rota dinâmica por tenant;
+- resolução de contexto no servidor;
+- `/api/health` para readiness básica;
+- UI responsiva sem depender de banco ou API key;
+- base explícita para evoluir autenticação, PostgreSQL, `tenant_id`, RLS e audit log;
+- build reproduzível em Docker.
 
-### O que o exemplo demonstra
-
-- App Router com Next.js 16.3.3 + React 19.2.8 + TypeScript;
-- rota dinâmica por tenant;
-- resolução do contexto no servidor;
-- `/api/health`;
-- UI responsiva sem dependência de banco ou API key;
-- base explícita para evoluir autenticação, PostgreSQL, `tenant_id`, RLS e audit log.
-
-> O slug da URL **não é isolamento multi-tenant**. O playbook trata autorização e isolamento como controles de servidor e dados, não como convenção visual.
+> O slug da URL **não é isolamento multi-tenant**. Autorização e isolamento precisam ser controles reais no servidor e na camada de dados.
 
 ## Por que este projeto existe
 
@@ -58,20 +72,6 @@ PROBLEM
 → OBSERVE
 → IMPROVE
 ```
-
-## Conteúdo técnico
-
-- **[Playbook principal](./docs/PLAYBOOK.md)** — ciclo completo de engenharia;
-- **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — tenancy, isolamento e testes;
-- **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails e handoff;
-- **[Roadmap](./docs/ROADMAP.md)** — evolução planejada;
-- **[Projetos executáveis](./examples/README.md)** — exemplos prontos para clone/VS Code.
-
-### Templates
-
-- [Architecture Decision Record](./templates/ADR_TEMPLATE.md)
-- [Production Readiness Checklist](./templates/PRODUCTION_READINESS_CHECKLIST.md)
-- [Tenant Isolation Test Matrix](./templates/TENANT_ISOLATION_TEST_MATRIX.md)
 
 ## Arquitetura de referência
 
@@ -92,6 +92,20 @@ flowchart TB
     AI --> O
 ```
 
+## Conteúdo técnico
+
+- **[Playbook principal](./docs/PLAYBOOK.md)** — ciclo completo de engenharia;
+- **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — tenancy, isolamento e testes;
+- **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails e handoff;
+- **[Roadmap](./docs/ROADMAP.md)** — evolução planejada;
+- **[Projetos executáveis](./examples/README.md)** — exemplos prontos para clone/VS Code.
+
+### Templates
+
+- [Architecture Decision Record](./templates/ADR_TEMPLATE.md)
+- [Production Readiness Checklist](./templates/PRODUCTION_READINESS_CHECKLIST.md)
+- [Tenant Isolation Test Matrix](./templates/TENANT_ISOLATION_TEST_MATRIX.md)
+
 ## Quality gate
 
 Antes de chamar um fluxo crítico de pronto:
@@ -108,21 +122,23 @@ Antes de chamar um fluxo crítico de pronto:
 [ ] documentação sincronizada
 ```
 
-## Git workflow
+## Contribua
 
-```bash
-git checkout -b feat/minha-evolucao
-# altere e valide no VS Code
-git add .
-git commit -m "feat: minha evolucao"
-git push -u origin feat/minha-evolucao
-```
+Issues, testes, exemplos de tenant isolation, ADRs e melhorias no starter são bem-vindos. Leia [CONTRIBUTING.md](./CONTRIBUTING.md) antes de abrir um PR.
 
-Depois abra uma Pull Request. Consulte [CONTRIBUTING.md](./CONTRIBUTING.md).
+Se este projeto for útil:
+
+- dê uma **Star** para ajudar na descoberta;
+- use **Watch → Releases** para acompanhar versões importantes;
+- abra uma Issue com um cenário real de SaaS que você gostaria de ver modelado.
 
 ## Segurança e privacidade
 
 Este repositório contém somente material público. Não publique senhas, tokens, `.env` reais, chaves privadas, IPs internos, dados de clientes, dumps de banco ou código proprietário. Veja [SECURITY.md](./SECURITY.md).
+
+## Licença
+
+Distribuído sob a [MIT License](./LICENSE).
 
 ---
 
