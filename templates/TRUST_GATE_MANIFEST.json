@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "system": "replace-me",
+  "scan_roots": ["app", "lib", "services", "infra"],
+  "blocking_controls": {
+    "identity": {
+      "status": "planned",
+      "evidence": []
+    },
+    "tenant_boundary": {
+      "status": "planned",
+      "evidence": []
+    },
+    "rbac_capabilities": {
+      "status": "planned",
+      "evidence": []
+    },
+    "record_scope": {
+      "status": "planned",
+      "evidence": []
+    },
+    "session_security": {
+      "status": "planned",
+      "evidence": []
+    },
+    "secrets": {
+      "status": "planned",
+      "evidence": []
+    },
+    "audit": {
+      "status": "planned",
+      "evidence": []
+    }
+  },
+  "advisory_controls": {
+    "privacy_lgpd": {
+      "status": "planned",
+      "note": "Map applicability and provide runtime evidence."
+    },
+    "backup_restore": {
+      "status": "planned",
+      "note": "Require tested restore evidence, not backup creation only."
+    }
+  }
+}
