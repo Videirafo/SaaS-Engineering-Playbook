@@ -105,6 +105,7 @@ flowchart TB
 ## Conteúdo técnico
 
 - **[Playbook principal](./docs/PLAYBOOK.md)** — ciclo completo de engenharia;
+- **[VIDEIRA TRUST GATE v1](./docs/VIDEIRA_TRUST_GATE.md)** — identidade, tenancy, capabilities, RLS, auditoria, privacidade e recovery com evidência;
 - **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — tenancy, isolamento e testes;
 - **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails e handoff;
 - **[Roadmap](./docs/ROADMAP.md)** — evolução planejada;
@@ -115,6 +116,7 @@ flowchart TB
 - [Architecture Decision Record](./templates/ADR_TEMPLATE.md)
 - [Production Readiness Checklist](./templates/PRODUCTION_READINESS_CHECKLIST.md)
 - [Tenant Isolation Test Matrix](./templates/TENANT_ISOLATION_TEST_MATRIX.md)
+- [VIDEIRA TRUST GATE manifest](./templates/TRUST_GATE_MANIFEST.json)
 
 ## Quality gate
 
@@ -123,6 +125,7 @@ Antes de chamar um fluxo crítico de pronto:
 ```text
 [ ] requisito e regra de negócio claros
 [ ] autorização explícita
+[ ] VIDEIRA TRUST GATE executado e com evidência
 [ ] tenant isolation testado
 [ ] validação de entrada
 [ ] happy path + failure path
