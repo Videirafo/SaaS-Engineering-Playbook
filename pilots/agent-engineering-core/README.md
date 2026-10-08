@@ -32,7 +32,7 @@ git fetch origin main
 git diff --name-only -z origin/main...HEAD | node pilots/agent-engineering-core/verify-scope.mjs
 ```
 
-O gate aceita somente o diretório deste piloto, sua documentação canônica e o workflow específico. Arquivos sensíveis/dotfiles no piloto, arquivos de produção, caminhos malformados e entradas sem delimitador NUL bloqueiam. O workflow emprega `--no-renames` para analisar as duas pontas de arquivos movidos. Um segundo job `trusted-scope` usa `pull_request_target` e a lista de arquivos da API do GitHub, sem checkout, mas **só estará operacional para PRs futuros após sua integração em `main`**. O gate local do próprio PR não constitui proteção independente, e políticas de branch devem exigir o job de base. A execução local depende de `git` e da branch correta. Nenhum teste usa credenciais ou provedores externos.
+O gate aceita somente o diretório deste piloto, sua documentação canônica e o workflow específico. Arquivos sensíveis/dotfiles no piloto, arquivos de produção, caminhos malformados e entradas sem delimitador NUL bloqueiam. O workflow emprega `--no-renames` para analisar as duas pontas de arquivos movidos. O workflow separado `.github/workflows/agent-engineering-trusted-scope.yml` contém o job `trusted-scope` em `pull_request_target` e a lista de arquivos da API do GitHub, sem checkout, mas **só estará operacional para PRs futuros após sua integração em `main`**. O gate local do próprio PR não constitui proteção independente, e políticas de branch devem exigir o job de base. A execução local depende de `git` e da branch correta. Nenhum teste usa credenciais ou provedores externos.
 
 ## Evidências e limites
 
