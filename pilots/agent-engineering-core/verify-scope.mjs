@@ -12,6 +12,7 @@ const ALLOWED = Object.freeze([
   /^pilots\/agent-engineering-core\/[a-zA-Z0-9_.\/-]+$/,
   /^docs\/VIDEIRA_AGENT_ENGINEERING_CORE\.md$/,
   /^\.github\/workflows\/agent-engineering-pilot\.yml$/,
+  /^\.github\/workflows\/agent-engineering-trusted-scope\.yml$/,
 ]);
 
 export function verifyScope(paths) {
