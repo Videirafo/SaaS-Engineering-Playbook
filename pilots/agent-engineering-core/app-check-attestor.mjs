@@ -24,9 +24,8 @@ const isAllowed = (path) => {
   if (EXACT.has(path)) return true;
   return path.startsWith(PILOT_ROOT) &&
     /^pilots\/agent-engineering-core\/[A-Za-z0-9_.\/-]+$/.test(path) &&
-    !path.split('/').some((part) => !part || part === '.' || part === '..' ||
-      (path.startsWith(PILOT_ROOT) &&
-       path.split('/').indexOf(part) >= 2 && part.startsWith('.')));
+    path.slice(PILOT_ROOT.length).split('/').every((part) =>
+      part !== '' && part !== '.' && part !== '..' && !part.startsWith('.'));
 };
 
 const fail = (summary, sha = null) =>
