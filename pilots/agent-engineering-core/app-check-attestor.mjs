@@ -2,11 +2,12 @@
  * Trust-boundary contract for an external GitHub App check publisher.
  *
  * Must be executed by an independently deployed, authenticated GitHub App
- * handler. Never load this module from an untrusted PR checkout.
+ * handler. The existing App has Commit statuses:write, not Checks:write.
+ * Never load this module from an untrusted PR checkout.
  * This module neither accesses credentials nor creates checks without a
  * trusted adapter explicitly supplied by that handler.
  */
-export const CHECK_NAME = 'videira/trusted-scope';
+export const STATUS_CONTEXT = 'videira/trusted-scope';
 export const EXPECTED_REPOSITORY = 'Videirafo/SaaS-Engineering-Playbook';
 const MAX_COMPLETE_FILE_COUNT = 2999;
 const PILOT_ROOT = 'pilots/agent-engineering-core/';
@@ -77,13 +78,13 @@ export function evaluateAttestation({ repositoryFullName, pull, files }) {
  * Adapter contract: getPull, listFiles (all pages), createCheck. No app
  * token is accepted here: credential isolation belongs to the trusted
  * external handler. If a head SHA changes during verification, do not
- * emit any check; GitHub branch protection must fail closed on absence.
+ * emit any status; GitHub branch protection must fail closed on absence.
  */
 export async function attestPullRequest({ repositoryFullName, pullNumber, api }) {
   if (repositoryFullName !== EXPECTED_REPOSITORY ||
       !Number.isSafeInteger(pullNumber) || pullNumber < 1 ||
       !api || typeof api.getPull !== 'function' ||
-      typeof api.listFiles !== 'function' || typeof api.createCheck !== 'function') {
+      typeof api.listFiles !== 'function' || typeof api.createStatus !== 'function') {
     throw new Error('Invalid trusted attestation invocation');
   }
   const [owner, repo] = repositoryFullName.split('/');
@@ -97,13 +98,11 @@ export async function attestPullRequest({ repositoryFullName, pullNumber, api })
   if (latest?.head?.sha !== result.headSha || latest?.state !== 'open') {
     throw new Error('PR head moved during trusted attestation');
   }
-  const check = await api.createCheck({
-    owner, repo, name: CHECK_NAME, head_sha: result.headSha,
-    status: 'completed', conclusion: result.conclusion,
-    output: {
-      title: result.ok ? 'Trusted scope policy passed' : 'Trusted scope policy blocked',
-      summary: result.summary,
-    },
+  const status = await api.createStatus({
+    owner, repo, sha: result.headSha,
+    context: STATUS_CONTEXT,
+    state: result.ok ? 'success' : 'failure',
+    description: result.summary.slice(0, 140),
   });
-  return { ...result, checkId: check?.id ?? null };
+  return { ...result, statusId: status?.id ?? null };
 }
