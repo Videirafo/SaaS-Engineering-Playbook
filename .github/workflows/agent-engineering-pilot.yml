@@ -2,10 +2,6 @@ name: Agent Engineering Core Pilot (no deploy)
 
 on:
   pull_request:
-    paths:
-      - "pilots/agent-engineering-core/**"
-      - "docs/VIDEIRA_AGENT_ENGINEERING_CORE.md"
-      - ".github/workflows/agent-engineering-pilot.yml"
   workflow_dispatch:
 
 permissions:
