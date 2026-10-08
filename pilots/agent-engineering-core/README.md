@@ -1,0 +1,30 @@
+# Piloto isolado — Videira Agent Engineering Core
+
+**Issue:** https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/28
+
+Implementação demonstrativa *zero-dependency*, sem chamadas de rede, sem instalação de skills, sem conexão com produção e sem leitura de segredos. Inclui **Superpowers** (spec/TDD), **Karpathy** (quatro princípios), **I Have ADHD** (resposta objetiva) e **Octopus** (revisão simulada com evidência).
+
+## Executar no VS Code
+
+Abra o repositório e rode no terminal (Node.js 20+):
+
+```bash
+node --test pilots/agent-engineering-core/validate.test.mjs
+node pilots/agent-engineering-core/validate.mjs pilots/agent-engineering-core/fixtures/valid.json
+```
+
+O comando do validador retorna JSON e código de saída `0` em `PASS_PILOT`; falhas retornam `1`. O validador é apenas um **gate de formato, consistência e políticas** sobre entradas declaradas. Não comprova que modelos externos executaram revisões nem verifica se um teste de produto realmente foi rodado.
+
+## Contrato da fixture
+
+1. `sources`: allowlist completa das quatro referências originais, sem URLs extras.
+2. `spec`, `plan` e `tdd`: issue, premissas, aceite testável, até cinco passos e registros RED/GREEN de exemplo.
+3. `karpathy` e `communication`: regras declaradas e comunicação com ação, estado e próximo passo.
+4. `reviews`: somente `mode: simulated`, 2–12 revisores fictícios distintos, aprovações unânimes e referências a fontes conhecidas.
+5. `safety` e `changed_files`: nenhum uso de segredo, tráfego externo, modificação de produção ou proposta de deploy.
+
+## Evidências e limites
+
+- Testes negativos cobrem: evidência ausente, discordância, revisor único, fonte não permitida, passos excessivos, princípio ausente e tentativa de produção.
+- `PASS_PILOT` não é certificação de segurança de um SaaS: requisitos de Auth, RLS, tenant, LGPD, backup, CI de produto e smoke tests continuam no TRUST GATE.
+- Adoção não copia código de fornecedores e não inicia nenhum serviço.
