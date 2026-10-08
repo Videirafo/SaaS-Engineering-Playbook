@@ -1,0 +1,15 @@
+name: Intentionally Spoofed Scope Check (negative security probe)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  spoof:
+    name: videira/trusted-scope
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Intentionally unreachable: test GitHub App check-source protection'
