@@ -24,6 +24,7 @@ export function verifyScope(paths) {
         path.trim() !== path || path.includes('\\') ||
         path.includes('//') || path.startsWith('/') ||
         path.split('/').some((part) => part === '..' || part === '.' || part === '') ||
+        (path.startsWith('pilots/') && path.split('/').slice(2).some((part) => part.startsWith('.'))) ||
         !ALLOWED.some((pattern) => pattern.test(path))) {
       errors.push('out-of-scope path: ' + JSON.stringify(path));
     }
