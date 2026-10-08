@@ -23,6 +23,17 @@ O comando do validador retorna JSON e código de saída `0` em `PASS_PILOT`; fal
 4. `reviews`: somente `mode: simulated`, 2–12 revisores fictícios distintos, aprovações unânimes e referências a fontes conhecidas.
 5. `safety` e `changed_files`: nenhum uso de segredo, tráfego externo, modificação de produção ou proposta de deploy.
 
+## Verificar alterações reais no pull request
+
+Além da validação declarativa da fixture, a CI usa `verify-scope.mjs` para validar os caminhos verdadeiramente alterados no PR. No VS Code, após buscar o branch base:
+
+```bash
+git fetch origin main
+git diff --name-only -z origin/main...HEAD | node pilots/agent-engineering-core/verify-scope.mjs
+```
+
+O gate aceita somente o diretório deste piloto, sua documentação canônica e o workflow específico. Arquivos sensíveis/dotfiles no piloto, arquivos de produção, caminhos malformados e entradas sem delimitador NUL bloqueiam. A execução local depende de `git` e da branch correta. Nenhum teste usa credenciais ou provedores externos.
+
 ## Evidências e limites
 
 - Testes negativos cobrem: evidência ausente, discordância, revisor único, fonte não permitida, passos excessivos, princípio ausente e tentativa de produção.
