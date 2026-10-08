@@ -17,10 +17,18 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: Offline contract tests
         run: node --test pilots/agent-engineering-core/validate.test.mjs
+      - name: Validate actual PR diff scope
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only -z "origin/${GITHUB_BASE_REF}...HEAD" | node pilots/agent-engineering-core/verify-scope.mjs
       - name: Valid fixture, always pilot only
         run: node pilots/agent-engineering-core/validate.mjs pilots/agent-engineering-core/fixtures/valid.json
