@@ -114,3 +114,65 @@ test('Trust Gate: human review remains mandatory', () => {
 test('Trust Gate: paths with traversal block', () => {
   expectBlocked((x) => { x.changed_files = ['pilots/agent-engineering-core/../other']; }, 'pilot-scoped');
 });
+
+
+import { spawnSync } from 'node:child_process';
+import { verifyScope } from './verify-scope.mjs';
+
+test('actual diff: scoped files are accepted', () => {
+  const paths = [
+    'docs/VIDEIRA_AGENT_ENGINEERING_CORE.md',
+    '.github/workflows/agent-engineering-pilot.yml',
+    'pilots/agent-engineering-core/validate.mjs',
+  ];
+  assert.equal(verifyScope(paths).status, 'PASS_SCOPE');
+});
+
+test('actual diff: out-of-scope production file blocks', () => {
+  assert.equal(verifyScope(['app/api/auth/route.ts']).status, 'BLOCKED');
+});
+
+test('actual diff: traversal, backslashes and dotfiles block', () => {
+  const paths = [
+    'pilots/agent-engineering-core/../secrets',
+    'pilots\\agent-engineering-core\\file.js',
+    'pilots/agent-engineering-core/.env',
+  ];
+  const result = verifyScope(paths);
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.errors.length, 3);
+});
+
+test('actual diff: empty path list blocks', () => {
+  assert.equal(verifyScope([]).status, 'BLOCKED');
+});
+
+test('actual diff CLI: valid NUL-separated input passes', () => {
+  const proc = spawnSync(process.execPath,
+    [new URL('./verify-scope.mjs', import.meta.url).pathname],
+    { input: 'pilots/agent-engineering-core/validate.mjs\\0', encoding: 'utf8' });
+  assert.equal(proc.status, 0, proc.stderr);
+  assert.match(proc.stdout, /PASS_SCOPE/);
+});
+
+test('actual diff CLI: missing NUL delimiter blocks', () => {
+  const proc = spawnSync(process.execPath,
+    [new URL('./verify-scope.mjs', import.meta.url).pathname],
+    { input: 'pilots/agent-engineering-core/validate.mjs', encoding: 'utf8' });
+  assert.equal(proc.status, 1);
+  assert.match(proc.stderr, /BLOCKED/);
+});
+
+test('contract CLI: unsafe fixture exits nonzero', () => {
+  const payload = copy();
+  payload.safety.deploy_requested = true;
+  const input = JSON.stringify(payload);
+  const cliSource = new URL('./validate.mjs', import.meta.url);
+  const proc = spawnSync(process.execPath, ['--input-type=module', '-e',
+    "import { validatePilot } from " + JSON.stringify(cliSource.href) +
+    "; const input = JSON.parse(process.argv[1]); const result = validatePilot(input); " +
+    "console.log(JSON.stringify(result)); if (!result.ok) process.exitCode = 1;",
+    input], { encoding: 'utf8' });
+  assert.equal(proc.status, 1, proc.stderr);
+  assert.match(proc.stdout, /BLOCKED/);
+});
