@@ -348,15 +348,15 @@ test('required check accepts a legitimate pilot-only PR', () => {
 test('required contract runs on all PRs with conditional scope CLI', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/agent-engineering-pilot.yml', import.meta.url), 'utf8');
   assert.match(workflow, /pull_request:/);
-  assert.doesNotMatch(workflow, /pull_request:\\n +paths:/);
-  assert.match(workflow, /verify-scope\\.mjs --conditional/);
+  assert.equal(workflow.includes('    paths:'), false);
+  assert.equal(workflow.includes('verify-scope.mjs --conditional'), true);
 });
 
 test('required contract conditional CLI is fail-closed and distinct from strict mode', () => {
   const toolPath = fileURLToPath(new URL('./verify-scope.mjs', import.meta.url));
   const probe = (paths, conditional = true) => spawnSync(process.execPath,
     [toolPath, ...(conditional ? ['--conditional'] : [])],
-    { encoding: 'utf8', input: paths.join('\\0') + '\\0' });
+    { encoding: 'utf8', input: paths.join(String.fromCharCode(0)) + String.fromCharCode(0) });
   const unrelated = probe(['README.md']);
   assert.equal(unrelated.status, 0, unrelated.stderr);
   assert.match(unrelated.stdout, /NOT_APPLICABLE/);
