@@ -29,6 +29,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff --name-only -z "origin/${GITHUB_BASE_REF}...HEAD" | node pilots/agent-engineering-core/verify-scope.mjs
+          git diff --no-renames --name-only -z "origin/${GITHUB_BASE_REF}...HEAD" | node pilots/agent-engineering-core/verify-scope.mjs
       - name: Valid fixture, always pilot only
         run: node pilots/agent-engineering-core/validate.mjs pilots/agent-engineering-core/fixtures/valid.json
