@@ -36,8 +36,12 @@ jobs:
               pull_number: request.number,
               per_page: 100
             });
-            if (files.length === 0) {
-              core.setFailed('No PR files returned');
+            // GitHub listFiles is capped at 3,000 entries. Never accept a truncated inventory.
+            const expectedCount = request.changed_files;
+            if (!Number.isSafeInteger(expectedCount) || expectedCount < 1 ||
+                expectedCount >= 3000 || files.length !== expectedCount) {
+              core.setFailed('Incomplete PR file inventory: reported=' +
+                String(expectedCount) + ', received=' + files.length);
               return;
             }
             const allowed = (path) =>
