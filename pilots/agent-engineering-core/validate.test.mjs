@@ -150,7 +150,7 @@ test('actual diff: empty path list blocks', () => {
 test('actual diff CLI: valid NUL-separated input passes', () => {
   const proc = spawnSync(process.execPath,
     [new URL('./verify-scope.mjs', import.meta.url).pathname],
-    { input: 'pilots/agent-engineering-core/validate.mjs\\0', encoding: 'utf8' });
+    { input: 'pilots/agent-engineering-core/validate.mjs' + String.fromCharCode(0), encoding: 'utf8' });
   assert.equal(proc.status, 0, proc.stderr);
   assert.match(proc.stdout, /PASS_SCOPE/);
 });
