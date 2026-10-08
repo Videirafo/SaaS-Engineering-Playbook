@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CHECK_NAME, EXPECTED_REPOSITORY, evaluateAttestation, attestPullRequest,
+  STATUS_CONTEXT, EXPECTED_REPOSITORY, evaluateAttestation, attestPullRequest,
 } from './app-check-attestor.mjs';
 
 const SHA = 'a'.repeat(40);
@@ -75,7 +75,7 @@ test('app policy rejects malformed paths and object records', () => {
   assert.equal(evaluate([null]).conclusion, 'failure');
 });
 
-function makeApi({ files = [FILE], pulls, rejectCheck = false } = {}) {
+function makeApi({ files = [FILE], pulls, rejectStatus = false } = {}) {
   const calls = [];
   const states = pulls || [BASE, BASE];
   let index = 0;
@@ -89,25 +89,24 @@ function makeApi({ files = [FILE], pulls, rejectCheck = false } = {}) {
       calls.push('listFiles');
       return files;
     },
-    createCheck: async (args) => {
-      calls.push({ createCheck: args });
-      if (rejectCheck) throw new Error('GitHub check creation rejected');
+    createStatus: async (args) => {
+      calls.push({ createStatus: args });
+      if (rejectStatus) throw new Error('GitHub status creation rejected');
       return { id: 42 };
     },
   };
 }
 
-test('trusted external adapter emits a named check on verified PR SHA only', async () => {
+test('trusted external adapter emits app-scoped status on verified PR SHA only', async () => {
   const api = makeApi();
   const result = await attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api });
   assert.equal(result.ok, true);
-  assert.equal(result.checkId, 42);
+  assert.equal(result.statusId, 42);
   assert.deepEqual(api.calls.slice(0, 3), ['getPull', 'listFiles', 'getPull']);
-  assert.deepEqual(api.calls[3].createCheck, {
+  assert.deepEqual(api.calls[3].createStatus, {
     owner: 'Videirafo', repo: 'SaaS-Engineering-Playbook',
-    name: CHECK_NAME, head_sha: SHA,
-    status: 'completed', conclusion: 'success',
-    output: { title: 'Trusted scope policy passed', summary: result.summary },
+    context: STATUS_CONTEXT, sha: SHA,
+    state: 'success', description: result.summary,
   });
 });
 
@@ -115,10 +114,10 @@ test('external adapter reports blocked scope as FAILURE, never SUCCESS', async (
   const api = makeApi({ files: [{ ...FILE, status: 'renamed', previous_filename: 'src/auth.ts' }] });
   const result = await attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api });
   assert.equal(result.conclusion, 'failure');
-  assert.equal(api.calls[3].createCheck.conclusion, 'failure');
+  assert.equal(api.calls[3].createStatus.state, 'failure');
 });
 
-test('external adapter refuses stale HEAD and emits no check', async () => {
+test('external adapter refuses stale HEAD and emits no status', async () => {
   const api = makeApi({ pulls: [BASE, { ...BASE, head: { sha: 'b'.repeat(40) } }] });
   await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api }), /head moved/);
   assert.equal(api.calls.some((c) => typeof c === 'object'), false);
@@ -129,10 +128,10 @@ test('external adapter fails on mismatched PR numbers, invalid invocations and A
   await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api: mismatch }), /number mismatch/);
   assert.equal(mismatch.calls.some((c) => typeof c === 'object'), false);
   await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 0, api: makeApi() }), /Invalid trusted/);
-  await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api: makeApi({ rejectCheck: true }) }), /rejected/);
+  await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api: makeApi({ rejectStatus: true }) }), /rejected/);
 });
 
-test('external adapter must refuse a missing or invalid SHA, without creating a check', async () => {
+test('external adapter must refuse a missing or invalid SHA, without creating a status', async () => {
   const api = makeApi({ pulls: [{ ...BASE, head: { sha: null } }] });
   await assert.rejects(attestPullRequest({ repositoryFullName: EXPECTED_REPOSITORY, pullNumber: 29, api }), /Invalid PR head SHA/);
   assert.equal(api.calls.some((c) => typeof c === 'object'), false);
