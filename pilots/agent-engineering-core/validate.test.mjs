@@ -288,7 +288,7 @@ test('separate event streams: PR tests cannot impersonate trusted scope job', ()
   assert.match(prWorkflow, /persist-credentials: false/);
   assert.match(prWorkflow, /git diff --no-renames --name-only/);
   assert.match(trustedWorkflow, /pull_request_target:/);
-  assert.doesNotMatch(trustedWorkflow, /\\bactions\\/checkout@/);
+  assert.equal(trustedWorkflow.includes('actions/checkout@'), false);
   assert.match(trustedWorkflow, /previous_filename/);
   assert.match(trustedWorkflow, /pull-requests: read/);
   assert.equal(verifyScope(['.github/workflows/agent-engineering-trusted-scope.yml']).status, 'PASS_SCOPE');
