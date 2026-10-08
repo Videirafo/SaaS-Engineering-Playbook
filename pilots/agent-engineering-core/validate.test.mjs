@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { validatePilot } from './validate.mjs';
 
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/valid.json', import.meta.url), 'utf8'));
@@ -38,6 +39,10 @@ test('Superpowers: missing declared RED/GREEN blocks', () => {
 
 test('Karpathy: missing one principle blocks', () => {
   expectBlocked((x) => { x.karpathy.surgical_changes = false; }, 'surgical_changes');
+});
+
+test('Karpathy: self-reported hidden dotfile blocks', () => {
+  expectBlocked((x) => { x.changed_files.push('pilots/agent-engineering-core/.env'); }, 'pilot-scoped');
 });
 
 test('Karpathy: changes outside isolated pilot block', () => {
@@ -149,7 +154,7 @@ test('actual diff: empty path list blocks', () => {
 
 test('actual diff CLI: valid NUL-separated input passes', () => {
   const proc = spawnSync(process.execPath,
-    [new URL('./verify-scope.mjs', import.meta.url).pathname],
+    [fileURLToPath(new URL('./verify-scope.mjs', import.meta.url))],
     { input: 'pilots/agent-engineering-core/validate.mjs' + String.fromCharCode(0), encoding: 'utf8' });
   assert.equal(proc.status, 0, proc.stderr);
   assert.match(proc.stdout, /PASS_SCOPE/);
@@ -157,7 +162,7 @@ test('actual diff CLI: valid NUL-separated input passes', () => {
 
 test('actual diff CLI: missing NUL delimiter blocks', () => {
   const proc = spawnSync(process.execPath,
-    [new URL('./verify-scope.mjs', import.meta.url).pathname],
+    [fileURLToPath(new URL('./verify-scope.mjs', import.meta.url))],
     { input: 'pilots/agent-engineering-core/validate.mjs', encoding: 'utf8' });
   assert.equal(proc.status, 1);
   assert.match(proc.stderr, /BLOCKED/);
