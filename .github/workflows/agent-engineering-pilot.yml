@@ -69,7 +69,7 @@ jobs:
               return;
             }
             const allowed = (path) =>
-              /^pilots\\/agent-engineering-core\\/[A-Za-z0-9_.\\/-]+$/.test(path) &&
+              /^pilots\/agent-engineering-core\/[A-Za-z0-9_.\/-]+$/.test(path) &&
               !path.split('/').some((part) => part.startsWith('.') || part === '..' || part === '');
             const accepted = (path) => path === 'docs/VIDEIRA_AGENT_ENGINEERING_CORE.md' ||
               path === '.github/workflows/agent-engineering-pilot.yml' || allowed(path);
