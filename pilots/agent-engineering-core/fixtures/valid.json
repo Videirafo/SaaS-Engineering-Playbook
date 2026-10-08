@@ -1,0 +1,104 @@
+{
+  "version": "0.1",
+  "sources": [
+    "https://github.com/obra/superpowers",
+    "https://github.com/multica-ai/andrej-karpathy-skills",
+    "https://github.com/ayghri/i-have-adhd",
+    "https://github.com/nyldn/claude-octopus"
+  ],
+  "spec": {
+    "issue": "https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/28",
+    "objective": "Provar contrato isolado e bloqueios de segurança para o piloto",
+    "assumptions": [
+      "Revisores são fixtures fictícias e não modelos reais",
+      "Nenhuma aplicação externa será alterada"
+    ],
+    "out_of_scope": [
+      "Deploy em produção",
+      "Instalar plugins ou contratar modelos externos"
+    ],
+    "acceptance": [
+      {
+        "id": "AC-01",
+        "test": "node --test pilots/agent-engineering-core/validate.test.mjs"
+      },
+      {
+        "id": "AC-02",
+        "test": "node pilots/agent-engineering-core/validate.mjs pilots/agent-engineering-core/fixtures/valid.json"
+      }
+    ]
+  },
+  "plan": [
+    {
+      "action": "Registrar escopo e fontes",
+      "verify": "Especificação e allowlist presentes"
+    },
+    {
+      "action": "Definir critérios de aceite",
+      "verify": "Testes nomeados no contrato"
+    },
+    {
+      "action": "Executar validador e testes",
+      "verify": "Saídas locais documentadas"
+    }
+  ],
+  "tdd": {
+    "red_test": "Teste negativo sem evidências rejeitado",
+    "green_test": "Fixture válida aprovada como PASS_PILOT",
+    "command": "node --test pilots/agent-engineering-core/validate.test.mjs",
+    "observed_red": true,
+    "observed_green": true
+  },
+  "karpathy": {
+    "think_before_coding": true,
+    "simplicity_first": true,
+    "surgical_changes": true,
+    "goal_driven_execution": true
+  },
+  "communication": {
+    "first_action": "Validar fixture offline",
+    "state": "Piloto local, sem deploy",
+    "steps": [
+      "Executar testes Node",
+      "Confirmar bloqueios em casos negativos",
+      "Revisar evidência no PR"
+    ],
+    "next_action": "Solicitar revisão humana do PR draft"
+  },
+  "changed_files": [
+    "docs/VIDEIRA_AGENT_ENGINEERING_CORE.md",
+    "pilots/agent-engineering-core/validate.mjs"
+  ],
+  "reviews": {
+    "mode": "simulated",
+    "reviewers": [
+      {
+        "id": "sim:reviewer-1",
+        "vote": "approve",
+        "evidence": [
+          {
+            "source": "https://github.com/obra/superpowers",
+            "claim": "Planejamento e testes são gates de processo"
+          }
+        ]
+      },
+      {
+        "id": "sim:reviewer-2",
+        "vote": "approve",
+        "evidence": [
+          {
+            "source": "https://github.com/nyldn/claude-octopus",
+            "claim": "Discordância precisa ser registrada e avaliada"
+          }
+        ]
+      }
+    ]
+  },
+  "safety": {
+    "external_calls": false,
+    "secrets_used": false,
+    "production_writes": false,
+    "deploy_requested": false,
+    "human_review_required": true
+  }
+}
