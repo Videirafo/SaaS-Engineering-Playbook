@@ -1,0 +1,2 @@
+SECURITY NEGATIVE PROBE ONLY — intentionally outside pilot file scope.
+This file exists only in a temporary draft PR. Do not merge.
