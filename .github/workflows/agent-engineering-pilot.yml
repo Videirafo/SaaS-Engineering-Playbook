@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "22"
       - name: Offline contract tests
-        run: node --test pilots/agent-engineering-core/validate.test.mjs
+        run: node --test pilots/agent-engineering-core/validate.test.mjs pilots/agent-engineering-core/app-check-attestor.test.mjs
       - name: Validate actual PR diff scope
         if: github.event_name == 'pull_request'
         shell: bash
