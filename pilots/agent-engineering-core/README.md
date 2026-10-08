@@ -41,46 +41,52 @@ O gate aceita somente o diretório deste piloto, sua documentação canônica e 
 - Adoção não copia código de fornecedores e não inicia nenhum serviço.
 
 
-## Identidade antifalsificação de check (proposta isolada — NÃO ativada)
+## Status de segurança com identidade de GitHub App — proposta, NÃO ativada
 
-O contrato `app-check-attestor.mjs` foi adicionado com testes em
-`app-check-attestor.test.mjs`. Ele recebe snapshots obtidos da API do GitHub
-por um **serviço privado que opere como GitHub App**, examina os caminhos reais
-(`filename` e `previous_filename`), compara a quantidade declarada pelo
-GitHub com a listagem completa, bloqueia respostas truncadas (3.000 arquivos),
-confere o SHA do PR novamente e só então chama `api.createCheck`.
+O contrato `app-check-attestor.mjs` e os testes
+`app-check-attestor.test.mjs` são um **protótipo offline** de validação
+por aplicativo independente de PR. Exigem inventário integral do GitHub
+(`filename` e `previous_filename`, limite estrito abaixo de 3.000),
+branch-base correta, estado do PR, SHA de 40 caracteres e uma segunda leitura
+do HEAD antes de criar o resultado. Falhas geram `failure` ou ausência de
+status; não há aprovação implícita.
 
-**Situação comprovada:** o GitHub App existente `videira-mcp` (App ID
-`5049232`) está instalado no proprietário `Videirafo`, mas a consulta pública
-de permissões confirmou `checks: read`, não `checks: write`. Por isso **NÃO
-há check emitido pelo App e NÃO existe bloqueio por identidade em produção**.
-Os testes deste diretório usam apenas adaptadores simulados.
+**Identidade descoberta:** o App existente `videira-mcp` tem App ID
+`5049232`, está instalado no repositório via owner `Videirafo` e
+possui **`statuses: write`**. Ele não possui `checks: write`
+(`checks: read` somente), portanto usamos **Commit Status API** em vez de
+**Check Runs API**. O contrato chama `api.createStatus` por um adaptador
+injetado pelo executor e reserva o contexto `videira/trusted-scope`.
+Nenhum status foi publicado e nenhum check obrigatório do App foi configurado.
 
-Ativação controlada, fora deste piloto:
+### Etapas obrigatórias para ativação
 
-1. O proprietário da GitHub App deve autorizar `Checks: Read & write`
-   e aprovar as permissões atualizadas na instalação. Não inserir tokens,
-   chaves privadas ou `APP_PRIVATE_KEY` neste repositório nem em PRs.
-2. Instalar um executor **externo e protegido**, que valide o webhook GitHub
-   (assinatura/autenticidade, evento e reentregas), obtenha um token de
-   instalação de duração curta, chame `pulls.get` e `pulls.listFiles` com
-   todas as páginas e injete um adaptador `api.createCheck` que use
-   `POST /repos/{owner}/{repo}/check-runs`. O executor **não pode carregar
-   scripts, código ou configuração do PR**. Usar somente versão aprovada
-   e fixada do avaliador. Revisar acesso ao código da branch-base.
-3. Emitir check `videira/trusted-scope` no **SHA do HEAD do PR** com emissor
-   App ID `5049232`; somente então configurar esse check como requerido
-   na proteção de `main` e **vinculá-lo ao App ID correto**, nunca apenas ao
-   nome de um job do GitHub Actions.
-4. Provar o gate negativo em PRs isolados: um job
-   `videira/trusted-scope` com `if: false` não pode falsificar o check do
-   App; arquivos de produção, renames, contagem truncada, troca de SHA e
-   indisponibilidade do App devem causar bloqueio. Acompanhar o job antigo
-   `pull_request_target`: ele é *advisory* e não representa esse App.
-5. Após teste de origem e resiliência, obter novo parecer do revisor humano
-   independente e somente então considerar merge e rollout por SHA.
-   O Videira MCP #128 permanece bloqueado até terminar essas etapas.
+1. Implantar um executor privado e independente dos arquivos do PR, fora
+   deste piloto e fora da integração Videira MCP #128, com tratamento seguro
+   de webhooks `pull_request` (assinatura, redelivery, autenticação e replay)
+   e token de instalação curto da GitHub App existente. A implementação,
+   gestão de segredos e deploy desse executor **ainda são pendentes**.
+2. O executor implementará `getPull`, `listFiles` com paginação integral
+   e `createStatus` via `POST /repos/{owner}/{repo}/statuses/{sha}`.
+   O status deverá ser escrito no HEAD exato com contexto
+   `videira/trusted-scope` e estado `success` ou `failure`.
+   Não executar scripts ou workflows fornecidos por um PR.
+3. Verificar na API uma execução real cujo **autor seja o App ID
+   `5049232`**. Só depois adicionar o contexto aos required status checks
+   de `main`, vinculando-o à origem do GitHub App, **não apenas ao nome**.
+   Manter a revisão humana independente, os checks globais e as regras
+   existentes.
+4. Provar com PR controlado que um job falsificado do GitHub Actions chamado
+   `videira/trusted-scope` não satisfaz a exigência de origem. Repetir
+   testes negativos com rename origem/destino, arquivo externo, contagem
+   incompleta, ausência de token/serviço, troca de SHA e PR fechado.
+5. O job experimental `pull_request_target` não é a identidade
+   anti-spoof. Antes de exigir qualquer workflow nesse evento, avaliar
+   as políticas de Actions e a disponibilidade real do evento. Se o
+   status do App assumir o gate, considerar a retirada desse job
+   experimental em uma alteração revisada separadamente.
 
-Nenhuma permissão ou segredo foi alterado pela implementação do contrato.
-`PASS_PILOT` não autoriza merge. Consultar a
-[issue de governança #30](https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/30).
+Até completar todas as provas, o P1 **permanece aberto**, o PR #29 não
+deve ser mesclado e o Videira MCP #128 fica bloqueado. Não salvar chaves
+privadas, webhooks secretos ou tokens neste repositório. `PASS_PILOT`
+não autoriza produção. Acompanhar a [issue #30](https://github.com/Videirafo/SaaS-Engineering-Playbook/issues/30).
