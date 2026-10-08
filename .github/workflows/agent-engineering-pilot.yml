@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      # The workflow is loaded from the protected BASE branch.
+      # The workflow is loaded from the BASE branch (requires branch protection to be enforced).
       # Never check out PR-controlled code or execute PR scripts in this job.
       - name: Validate full PR file list from GitHub API
         uses: actions/github-script@v7
