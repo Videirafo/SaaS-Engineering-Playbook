@@ -307,3 +307,12 @@ test('trusted API policy: rejects invalid reported file count', async () => {
   const result = await runTrustedPolicy(files, true, '1');
   assert.match(result.fails[0], /Incomplete PR file inventory/);
 });
+
+
+test('trusted API policy: rejects GitHub 3000-file API ceiling', async () => {
+  const file = { filename: 'pilots/agent-engineering-core/validate.mjs' };
+  const result = await runTrustedPolicy(Array(3000).fill(file), true, 3001);
+  assert.match(result.fails[0], /Incomplete PR file inventory/);
+  const atLimit = await runTrustedPolicy(Array(3000).fill(file), true, 3000);
+  assert.match(atLimit.fails[0], /Incomplete PR file inventory/);
+});
