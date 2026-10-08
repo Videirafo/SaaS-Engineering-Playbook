@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validatePilot } from './validate.mjs';
 
@@ -180,4 +182,41 @@ test('contract CLI: unsafe fixture exits nonzero', () => {
     input], { encoding: 'utf8' });
   assert.equal(proc.status, 1, proc.stderr);
   assert.match(proc.stdout, /BLOCKED/);
+});
+
+test('PR diff: rejects a rename out of production into a pilot path', () => {
+  const root = mkdtempSync(join(tmpdir(), 'videira-rename-gate-'));
+  const git = (args) => {
+    const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout;
+  };
+  try {
+    git(['init', '-q']);
+    git(['config', 'user.name', 'Regression Runner']);
+    git(['config', 'user.email', 'regression@example.invalid']);
+
+    const source = join(root, 'src', 'auth.ts');
+    const destination = join(root, 'pilots', 'agent-engineering-core', 'auth.ts');
+    mkdirSync(join(root, 'src'), { recursive: true });
+    writeFileSync(source, Array.from({ length: 80 }, (_, i) => 'export const value' + i + ' = ' + i + ';').join('\\n') + '\\n');
+    git(['add', 'src/auth.ts']);
+    git(['commit', '-qm', 'baseline']);
+
+    mkdirSync(join(root, 'pilots', 'agent-engineering-core'), { recursive: true });
+    renameSync(source, destination);
+    git(['add', '-A']);
+    git(['commit', '-qm', 'move production file']);
+
+    const withRenames = git(['diff', '-M', '--name-only', '-z', 'HEAD~1', 'HEAD']).split(String.fromCharCode(0)).filter(Boolean);
+    assert.deepEqual(withRenames, ['pilots/agent-engineering-core/auth.ts']);
+    assert.equal(verifyScope(withRenames).status, 'PASS_SCOPE', 'demonstrates vulnerable rename-only file listing');
+
+    const safePaths = git(['diff', '--no-renames', '--name-only', '-z', 'HEAD~1', 'HEAD']).split(String.fromCharCode(0)).filter(Boolean);
+    assert.ok(safePaths.includes('src/auth.ts'), 'original deleted production path must be visible');
+    assert.ok(safePaths.includes('pilots/agent-engineering-core/auth.ts'), 'new pilot path must be visible');
+    assert.equal(verifyScope(safePaths).status, 'BLOCKED');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
