@@ -43,6 +43,16 @@ Formato de até cinco ações: `Ação → Estado → passos numerados → evid�
 - Resultado `PASS_PILOT` **nunca** implica `PRODUCTION_READY`; o verificador retorna `production_ready: false` por construção.
 - Revisão real futura: opt-in e read-only, minimização de dados, política de provedores, limite de custo, logs de decisões, aprovação de humano e TRUST GATE.
 
+## Gates verificáveis versus alegações da fixture
+
+O validador `validate.mjs` checa somente **declarações sintaticamente válidas**. Os campos `observed_red`, `observed_green`, `changed_files` e os votos de revisores são auto-relatados e **não** constituem evidência independente, mesmo quando a fixture retorna `PASS_PILOT`.
+
+O workflow realiza duas verificações adicionais verificáveis:
+1. executa o conjunto de testes com `node --test`, inclusive os cenários que DEVEM falhar;
+2. compara **arquivos reais do PR** com o escopo permitido por `git diff --name-only -z` e `verify-scope.mjs`, rejeitando alterações fora do piloto.
+
+A verificação do diff roda em PRs que acionam o workflow (filtro `paths`); não é uma política global de branch protection. A revisão por outra pessoa continua pendente até ser registrada no GitHub. A autoria/validade das afirmações das fontes não é comprovada por este protótipo. Para produtos, somente artefatos assinados/identificados, testes rastreáveis e o TRUST GATE são evidências suficientes.
+
 ## Relação com padrões existentes
 
 | Baseline | Regra de compatibilidade |
