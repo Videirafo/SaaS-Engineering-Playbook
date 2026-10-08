@@ -223,7 +223,7 @@ test('PR diff: rejects a rename out of production into a pilot path', () => {
 
 
 const trustedPolicySource = () => {
-  const yaml = readFileSync(new URL('../../.github/workflows/agent-engineering-pilot.yml', import.meta.url), 'utf8');
+  const yaml = readFileSync(new URL('../../.github/workflows/agent-engineering-trusted-scope.yml', import.meta.url), 'utf8');
   const anchor = '          script: |\n';
   const start = yaml.indexOf(anchor);
   assert.ok(start >= 0, 'trusted-scope script must exist in the workflow');
@@ -277,4 +277,19 @@ test('trusted API policy: blocks dotfile and missing PR context', async () => {
   assert.equal(badFile.fails.length, 1);
   const noPR = await runTrustedPolicy([], false);
   assert.equal(noPR.fails.length, 1);
+});
+
+test('separate event streams: PR tests cannot impersonate trusted scope job', () => {
+  const prWorkflow = readFileSync(new URL('../../.github/workflows/agent-engineering-pilot.yml', import.meta.url), 'utf8');
+  const trustedWorkflow = readFileSync(new URL('../../.github/workflows/agent-engineering-trusted-scope.yml', import.meta.url), 'utf8');
+  assert.match(prWorkflow, /pull_request:/);
+  assert.doesNotMatch(prWorkflow, /pull_request_target:/);
+  assert.doesNotMatch(prWorkflow, /trusted-scope:/);
+  assert.match(prWorkflow, /persist-credentials: false/);
+  assert.match(prWorkflow, /git diff --no-renames --name-only/);
+  assert.match(trustedWorkflow, /pull_request_target:/);
+  assert.doesNotMatch(trustedWorkflow, /\\bactions\\/checkout@/);
+  assert.match(trustedWorkflow, /previous_filename/);
+  assert.match(trustedWorkflow, /pull-requests: read/);
+  assert.equal(verifyScope(['.github/workflows/agent-engineering-trusted-scope.yml']).status, 'PASS_SCOPE');
 });
