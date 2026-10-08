@@ -6,6 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyScope } from './verify-scope.mjs';
 
 export const REQUIRED_SOURCES = Object.freeze([
   'https://github.com/obra/superpowers',
@@ -20,12 +21,6 @@ const PRINCIPLES = Object.freeze([
   'surgical_changes',
   'goal_driven_execution',
 ]);
-
-const SAFE_PATHS = [
-  /^pilots\/agent-engineering-core\//,
-  /^docs\/VIDEIRA_AGENT_ENGINEERING_CORE\.md$/,
-  /^\.github\/workflows\/agent-engineering-pilot\.yml$/,
-];
 
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const filled = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -87,8 +82,7 @@ export function validatePilot(data) {
   }
 
   const files = data.changed_files;
-  check(nonempty(files) && files.every((p) => filled(p) && SAFE_PATHS.some((re) => re.test(p)) &&
-    !p.split('/').includes('..')),
+  check(verifyScope(files).ok,
   'changed_files: pilot-scoped paths only');
 
   const reviews = data.reviews;
