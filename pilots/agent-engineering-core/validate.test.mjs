@@ -366,3 +366,10 @@ test('required contract conditional CLI is fail-closed and distinct from strict 
   const strict = probe(['README.md'], false);
   assert.equal(strict.status, 1);
 });
+
+
+test('manual scope command preserves rename-source visibility', () => {
+  const readme = readFileSync(new URL('./README.md', import.meta.url), 'utf8');
+  assert.ok(readme.includes('git diff --no-renames --name-only -z origin/main...HEAD | node pilots/agent-engineering-core/verify-scope.mjs'));
+  assert.equal(readme.includes('git diff --name-only -z origin/main...HEAD'), false);
+});
