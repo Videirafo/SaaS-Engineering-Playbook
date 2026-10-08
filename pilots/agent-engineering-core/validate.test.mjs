@@ -233,7 +233,7 @@ const trustedPolicySource = () => {
   return new AsyncFunction('github', 'context', 'core', script);
 };
 
-async function runTrustedPolicy(files, withPR = true) {
+async function runTrustedPolicy(files, withPR = true, reportedCount = files.length) {
   const fails = [];
   const messages = [];
   const script = trustedPolicySource();
@@ -245,7 +245,7 @@ async function runTrustedPolicy(files, withPR = true) {
     rest: { pulls: { listFiles: () => undefined } },
   };
   const context = {
-    payload: withPR ? { pull_request: { number: 29 } } : {},
+    payload: withPR ? { pull_request: { number: 29, changed_files: reportedCount } } : {},
     repo: { owner: 'Videirafo', repo: 'SaaS-Engineering-Playbook' },
   };
   const core = { setFailed: (m) => fails.push(m), info: (m) => messages.push(m) };
