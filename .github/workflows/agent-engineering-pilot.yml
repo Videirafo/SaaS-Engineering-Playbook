@@ -6,13 +6,21 @@ on:
       - "pilots/agent-engineering-core/**"
       - "docs/VIDEIRA_AGENT_ENGINEERING_CORE.md"
       - ".github/workflows/agent-engineering-pilot.yml"
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - "pilots/agent-engineering-core/**"
+      - "docs/VIDEIRA_AGENT_ENGINEERING_CORE.md"
+      - ".github/workflows/agent-engineering-pilot.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   contract:
+    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -33,3 +41,46 @@ jobs:
           git diff --no-renames --name-only -z "origin/${GITHUB_BASE_REF}...HEAD" | node pilots/agent-engineering-core/verify-scope.mjs
       - name: Valid fixture, always pilot only
         run: node pilots/agent-engineering-core/validate.mjs pilots/agent-engineering-core/fixtures/valid.json
+
+  trusted-scope:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The workflow is loaded from the protected BASE branch.
+      # Never check out PR-controlled code or execute PR scripts in this job.
+      - name: Validate full PR file list from GitHub API
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const request = context.payload.pull_request;
+            if (!request) {
+              core.setFailed('Missing pull request context');
+              return;
+            }
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: request.number,
+              per_page: 100
+            });
+            if (files.length === 0) {
+              core.setFailed('No PR files returned');
+              return;
+            }
+            const allowed = (path) =>
+              /^pilots\\/agent-engineering-core\\/[A-Za-z0-9_.\\/-]+$/.test(path) &&
+              !path.split('/').some((part) => part.startsWith('.') || part === '..' || part === '');
+            const accepted = (path) => path === 'docs/VIDEIRA_AGENT_ENGINEERING_CORE.md' ||
+              path === '.github/workflows/agent-engineering-pilot.yml' || allowed(path);
+            const forbidden = [];
+            for (const file of files) {
+              for (const path of [file.filename, file.previous_filename].filter(Boolean)) {
+                if (!accepted(path)) forbidden.push(path);
+              }
+            }
+            if (forbidden.length) {
+              core.setFailed('Pilot scope violation: ' + forbidden.join(', '));
+            } else {
+              core.info('PASS_TRUSTED_SCOPE: ' + files.length + ' PR files and rename source paths checked');
+            }
