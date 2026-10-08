@@ -293,3 +293,17 @@ test('separate event streams: PR tests cannot impersonate trusted scope job', ()
   assert.match(trustedWorkflow, /pull-requests: read/);
   assert.equal(verifyScope(['.github/workflows/agent-engineering-trusted-scope.yml']).status, 'PASS_SCOPE');
 });
+
+
+test('trusted API policy: rejects incomplete file inventory', async () => {
+  const files = [{ filename: 'pilots/agent-engineering-core/validate.mjs' }];
+  const result = await runTrustedPolicy(files, true, 2);
+  assert.deepEqual(result.messages, []);
+  assert.match(result.fails[0], /Incomplete PR file inventory/);
+});
+
+test('trusted API policy: rejects invalid reported file count', async () => {
+  const files = [{ filename: 'pilots/agent-engineering-core/validate.mjs' }];
+  const result = await runTrustedPolicy(files, true, '1');
+  assert.match(result.fails[0], /Incomplete PR file inventory/);
+});
