@@ -124,7 +124,7 @@ test('Trust Gate: paths with traversal block', () => {
 
 
 import { spawnSync } from 'node:child_process';
-import { verifyScope } from './verify-scope.mjs';
+import { verifyScope, verifyConditionalScope } from './verify-scope.mjs';
 
 test('actual diff: scoped files are accepted', () => {
   const paths = [
@@ -315,4 +315,54 @@ test('trusted API policy: rejects GitHub 3000-file API ceiling', async () => {
   assert.match(result.fails[0], /Incomplete PR file inventory/);
   const atLimit = await runTrustedPolicy(Array(3000).fill(file), true, 3000);
   assert.match(atLimit.fails[0], /Incomplete PR file inventory/);
+});
+
+test('required check allows unrelated documentation and application PRs', () => {
+  assert.equal(verifyConditionalScope(['README.md']).status, 'NOT_APPLICABLE');
+  assert.equal(verifyConditionalScope(['SECURITY.md', 'examples/saas-tenant-dashboard/app/page.tsx']).status, 'NOT_APPLICABLE');
+});
+
+test('required check blocks mixed pilot and production changes', () => {
+  const result = verifyConditionalScope([
+    'pilots/agent-engineering-core/validate.mjs',
+    'src/auth.ts',
+  ]);
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 'BLOCKED');
+  assert.ok(result.errors.some((x) => x.includes('src/auth.ts')));
+});
+
+test('required check blocks hidden pilot paths and malformed inventory', () => {
+  assert.equal(verifyConditionalScope(['pilots/agent-engineering-core/.env']).status, 'BLOCKED');
+  assert.equal(verifyConditionalScope([]).status, 'BLOCKED');
+  assert.equal(verifyConditionalScope(['']).status, 'BLOCKED');
+});
+
+test('required check accepts a legitimate pilot-only PR', () => {
+  assert.equal(verifyConditionalScope([
+    'pilots/agent-engineering-core/validate.test.mjs',
+    'docs/VIDEIRA_AGENT_ENGINEERING_CORE.md',
+  ]).status, 'PASS_SCOPE');
+});
+
+test('required contract runs on all PRs with conditional scope CLI', () => {
+  const workflow = readFileSync(new URL('../../.github/workflows/agent-engineering-pilot.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /pull_request:/);
+  assert.doesNotMatch(workflow, /pull_request:\\n +paths:/);
+  assert.match(workflow, /verify-scope\\.mjs --conditional/);
+});
+
+test('required contract conditional CLI is fail-closed and distinct from strict mode', () => {
+  const toolPath = fileURLToPath(new URL('./verify-scope.mjs', import.meta.url));
+  const probe = (paths, conditional = true) => spawnSync(process.execPath,
+    [toolPath, ...(conditional ? ['--conditional'] : [])],
+    { encoding: 'utf8', input: paths.join('\\0') + '\\0' });
+  const unrelated = probe(['README.md']);
+  assert.equal(unrelated.status, 0, unrelated.stderr);
+  assert.match(unrelated.stdout, /NOT_APPLICABLE/);
+  const mixed = probe(['README.md', 'pilots/agent-engineering-core/validate.mjs']);
+  assert.equal(mixed.status, 1);
+  assert.match(mixed.stdout, /BLOCKED/);
+  const strict = probe(['README.md'], false);
+  assert.equal(strict.status, 1);
 });
