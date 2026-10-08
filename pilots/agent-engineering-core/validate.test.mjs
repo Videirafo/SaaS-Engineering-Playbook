@@ -220,3 +220,61 @@ test('PR diff: rejects a rename out of production into a pilot path', () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+
+const trustedPolicySource = () => {
+  const yaml = readFileSync(new URL('../../.github/workflows/agent-engineering-pilot.yml', import.meta.url), 'utf8');
+  const anchor = '          script: |\n';
+  const start = yaml.indexOf(anchor);
+  assert.ok(start >= 0, 'trusted-scope script must exist in the workflow');
+  const script = yaml.slice(start + anchor.length).split('\n')
+    .map((line) => line.startsWith('            ') ? line.slice(12) : line).join('\n');
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+  return new AsyncFunction('github', 'context', 'core', script);
+};
+
+async function runTrustedPolicy(files, withPR = true) {
+  const fails = [];
+  const messages = [];
+  const script = trustedPolicySource();
+  const github = {
+    paginate: async (_api, opts) => {
+      assert.equal(opts.pull_number, 29);
+      return files;
+    },
+    rest: { pulls: { listFiles: () => undefined } },
+  };
+  const context = {
+    payload: withPR ? { pull_request: { number: 29 } } : {},
+    repo: { owner: 'Videirafo', repo: 'SaaS-Engineering-Playbook' },
+  };
+  const core = { setFailed: (m) => fails.push(m), info: (m) => messages.push(m) };
+  await script(github, context, core);
+  return { fails, messages };
+}
+
+test('trusted API policy: rejects renamed production files', async () => {
+  const output = await runTrustedPolicy([{
+    filename: 'pilots/agent-engineering-core/auth.ts',
+    previous_filename: 'src/auth.ts',
+    status: 'renamed',
+  }]);
+  assert.equal(output.fails.length, 1);
+  assert.match(output.fails[0], /src\/auth\.ts/);
+});
+
+test('trusted API policy: allows expected pilot-only files', async () => {
+  const output = await runTrustedPolicy([
+    { filename: 'pilots/agent-engineering-core/validate.test.mjs', status: 'modified' },
+    { filename: 'docs/VIDEIRA_AGENT_ENGINEERING_CORE.md', status: 'modified' },
+  ]);
+  assert.deepEqual(output.fails, []);
+  assert.ok(output.messages.some((message) => message.startsWith('PASS_TRUSTED_SCOPE')));
+});
+
+test('trusted API policy: blocks dotfile and missing PR context', async () => {
+  const badFile = await runTrustedPolicy([{ filename: 'pilots/agent-engineering-core/.env', status: 'added' }]);
+  assert.equal(badFile.fails.length, 1);
+  const noPR = await runTrustedPolicy([], false);
+  assert.equal(noPR.fails.length, 1);
+});
