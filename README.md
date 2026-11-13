@@ -108,6 +108,8 @@ flowchart TB
 - **[VIDEIRA TRUST GATE v1](./docs/VIDEIRA_TRUST_GATE.md)** — identidade, tenancy, capabilities, RLS, auditoria, privacidade e recovery com evidência;
 - **[Arquitetura multi-tenant](./docs/MULTITENANCY.md)** — tenancy, isolamento e testes;
 - **[AI Agents em SaaS](./docs/AI_AGENTS.md)** — tools, RAG, guardrails e handoff;
+- **[Agentes em paralelo com worktrees](./docs/PARALLEL_AGENTS.md)** — modelo de execução isolada, handoff e script seguro para VS Code.
+
 - **[Roadmap](./docs/ROADMAP.md)** — evolução planejada;
 - **[Projetos executáveis](./examples/README.md)** — exemplos prontos para clone/VS Code.
 
