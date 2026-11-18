@@ -102,6 +102,10 @@
               "properties": {
                 "evidence": {
                   "minItems": 1
+                },
+                "last_verified_sha": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}$"
                 }
               },
               "required": [
